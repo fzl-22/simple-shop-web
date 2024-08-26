@@ -1,4 +1,6 @@
 const path = require("path");
+const fs = require("fs");
+const https = require("https");
 
 const express = require("express");
 const bodyParser = require("body-parser");
@@ -8,6 +10,9 @@ const MongoDBStore = require("connect-mongodb-session")(session);
 const csrf = require("csurf");
 const flash = require("connect-flash");
 const multer = require("multer");
+const helmet = require("helmet");
+const compression = require("compression");
+const morgan = require("morgan");
 
 const adminRoutes = require("./routes/admin");
 const shopRoutes = require("./routes/shop");
@@ -18,11 +23,17 @@ const DB_URL = require("./util/database");
 const User = require("./models/user");
 
 const app = express();
+
 const store = new MongoDBStore({
   uri: DB_URL,
   collection: "sessions",
 });
+
 const csrfProtection = csrf();
+
+const privateKey = fs.readFileSync("server.key");
+const certificate = fs.readFileSync("server.cert");
+
 const fileStorage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, "images");
@@ -32,6 +43,7 @@ const fileStorage = multer.diskStorage({
     cb(null, `${now}-${file.originalname}`);
   },
 });
+
 const fileFilter = (req, file, cb) => {
   if (
     file.mimetype === "image/png" ||
@@ -47,8 +59,18 @@ const fileFilter = (req, file, cb) => {
 app.set("view engine", "ejs");
 app.set("views", "views");
 
+const accessLogStream = fs.createWriteStream(
+  path.join(__dirname, "access.log"),
+  { flags: "a" }
+);
+
+app.use(helmet());
+app.use(compression());
+app.use(morgan("combined", { stream: accessLogStream }));
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use(multer({ storage: fileStorage, fileFilter: fileFilter }).single("image"));
+app.use(
+  multer({ storage: fileStorage, fileFilter: fileFilter }).single("image")
+);
 app.use(express.static(path.join(__dirname, "public")));
 app.use("/images", express.static(path.join(__dirname, "images")));
 app.use(
@@ -118,7 +140,17 @@ app.use((error, req, res, next) => {
 mongoose
   .connect(DB_URL)
   .then(() => {
-    app.listen(process.env.PORT, process.env.HOST, () => {
+    // use https with self-signed certificate
+    // https
+    //   .createServer({ key: privateKey, cert: certificate }, app)
+    //   .listen(process.env.PORT || 3000, process.env.HOST, () => {
+    //     console.log(
+    //       `Server running at http://${process.env.HOST}:${process.env.PORT}`
+    //     );
+    //   });
+
+    // use http
+    app.listen(process.env.PORT || 3000, process.env.HOST, () => {
       console.log(
         `Server running at http://${process.env.HOST}:${process.env.PORT}`
       );
