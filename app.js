@@ -137,6 +137,8 @@ app.use((error, req, res, next) => {
   });
 });
 
+module.exports = app;
+
 mongoose
   .connect(DB_URL)
   .then(() => {
@@ -150,7 +152,7 @@ mongoose
     //   });
 
     // use http
-    app.listen(process.env.PORT || 3000, () => {
+    app.listen(process.env.PORT || 8080, () => {
       console.log(
         `Server running at http://${process.env.HOST}:${process.env.PORT}`
       );
