@@ -150,7 +150,7 @@ mongoose
     //   });
 
     // use http
-    app.listen(process.env.PORT || 3000, process.env.HOST, () => {
+    app.listen(process.env.PORT || 3000, () => {
       console.log(
         `Server running at http://${process.env.HOST}:${process.env.PORT}`
       );
