@@ -1,4 +1,5 @@
-data/
+data/invoices/*
+!data/invoices/dummy.txt
 
 images/*
 !images/dummy.txt
