@@ -1,5 +1,7 @@
 data/
-images/
+
+images/*
+!images/dummy.txt
 
 logs
 *.log
